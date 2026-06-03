@@ -235,8 +235,8 @@ sequenceDiagram
 - Unique: `(company_id, report_type, fiscal_year, fiscal_period)` on `reports`
 - Unique: `(company_id, report_id, ratio_code)` on `ratio_results`
 - Partial index on `jobs(status)` for active job polling
-- GIN index on `report_pages.text_content` for search
-- Row-level tenant isolation via `tenant_id` predicates and optional PostgreSQL RLS.
+- GIN index on `to_tsvector('english', report_pages.text_content)` for full-text search (use `websearch_to_tsquery` in queries).
+- Row-level tenant isolation via `tenant_id` predicates in all repository queries; enable PostgreSQL RLS for enterprise/regulatory tenants or multi-team admin environments requiring defense in depth.
 
 ---
 
@@ -353,7 +353,7 @@ Recommended Celery config:
 - **AuthN**: JWT access tokens + refresh tokens; optional SSO (OIDC/SAML for enterprise).
 - **AuthZ**: RBAC with roles (`admin`, `analyst`, `viewer`) and tenant scoping.
 - **Security controls**:
-  - Password hashing with Argon2id.
+  - Password hashing with Argon2id (recommended baseline: memory_cost=65536, time_cost=3, parallelism=4; tune by runtime benchmarks).
   - Signed JWT keys in AWS KMS/Secrets Manager.
   - Short-lived access tokens + refresh token rotation.
   - API rate limiting (Redis token bucket).
@@ -418,7 +418,7 @@ flowchart TB
 - **Logs**: Structured JSON logs shipped to CloudWatch/OpenSearch.
 - **Errors**: Sentry for backend/frontend exception tracking.
 - **SLO examples**:
-  - P95 upload-to-analysis completion < 10 min
+  - P95 upload-to-analysis completion < 10 min (**completion boundary**: from successful `POST /v1/reports` acceptance to persisted `analysis.completed` event with AI report stored).
   - API error rate < 1%
   - Queue lag < 2 min for standard plan.
 
