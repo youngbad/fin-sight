@@ -235,8 +235,8 @@ sequenceDiagram
 - Unique: `(company_id, report_type, fiscal_year, fiscal_period)` on `reports`
 - Unique: `(company_id, report_id, ratio_code)` on `ratio_results`
 - Partial index on `jobs(status)` for active job polling
-- GIN index on `to_tsvector('english', report_pages.text_content)` for full-text search (use `websearch_to_tsquery` in queries).
-- Row-level tenant isolation via `tenant_id` predicates in all repository queries; enable PostgreSQL RLS for enterprise/regulatory tenants or multi-team admin environments requiring defense in depth.
+- GIN index on `to_tsvector('english', report_pages.text_content)` for full-text search (use `websearch_to_tsquery` in queries); tradeoff: faster search but higher index storage plus additional INSERT/UPDATE cost.
+- Row-level tenant isolation via `tenant_id` predicates in all repository queries; start with app-layer isolation for MVP, then enable PostgreSQL RLS for enterprise/regulatory tenants or multi-team admin environments requiring defense in depth (accepting modest query-planning overhead from RLS policies).
 
 ---
 
@@ -353,7 +353,7 @@ Recommended Celery config:
 - **AuthN**: JWT access tokens + refresh tokens; optional SSO (OIDC/SAML for enterprise).
 - **AuthZ**: RBAC with roles (`admin`, `analyst`, `viewer`) and tenant scoping.
 - **Security controls**:
-  - Password hashing with Argon2id (recommended baseline: memory_cost=65536, time_cost=3, parallelism=4; tune by runtime benchmarks).
+  - Password hashing with Argon2id (recommended baseline: memory_cost=65536, time_cost=3, parallelism=4; tune by runtime benchmarks; target roughly sub-200ms verification on production hardware to balance security and UX).
   - Signed JWT keys in AWS KMS/Secrets Manager.
   - Short-lived access tokens + refresh token rotation.
   - API rate limiting (Redis token bucket).
