@@ -361,7 +361,7 @@ Recommended Celery config:
 - **AuthZ**: RBAC with roles (`admin`, `analyst`, `viewer`) and tenant scoping.
 - **Security controls**:
   - Password hashing with Argon2id.
-    - Recommended baseline: `memory_cost=65536 KiB (~64 MiB)`, `time_cost=3`, `parallelism=4`.
+    - Recommended baseline: `memory_cost=65536 KiB (~ 64 MiB)`, `time_cost=3`, `parallelism=4`.
     - Tune from benchmark results; target roughly sub-200ms verification on production hardware to balance security and UX.
     - Load-test under concurrent authentication to validate memory headroom.
   - Signed JWT keys in AWS KMS/Secrets Manager.
